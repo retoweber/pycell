@@ -1,5 +1,5 @@
-hello;world
+=a = 5\na;hello;world
 =1;=2;=3;=4;=5
-=sum(sh[1,0:5]);this is a formula;;;
-=lambda l:list(map(lambda x:x*x, l));=sh[3,0](sh[1,:])
-=sum(cell[-3,1:4])
+=sum(S[1, 0:5]);this is a formula;;;
+=lambda l: list(map(lambda x:x*x, l));=S[3, 0](S[1, :])
+=sum(C[-3, 1:4]);=global a\na = 6\n'asdf';=a

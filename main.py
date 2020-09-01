@@ -4,12 +4,15 @@ from functools import reduce
 import importlib
 import csv
 
-boilerplate = """import dill as pickle
+with open('setup.py', 'r') as f:
+    boilerplate = '\n'.join(f.readlines())+'\n'
+
+boilerplate += """import dill as pickle
 import numpy as np
 from main import Cell, SpreadSheet
 
 
-def this_exec(function: str, cell: Cell, sh: SpreadSheet):
+def this_exec(function: str, C: Cell, S: SpreadSheet):
     exec(f"global res; res = {function}")
     return res
 
@@ -87,11 +90,11 @@ class Cell:
             dy = self.y
             dx = self.x
             if isinstance(y, slice):
-                y = slice(y.start+dy, y.stop+dy, y.step)
+                y = slice(y.start + dy, y.stop + dy, y.step)
             else:
                 y += dy
             if isinstance(x, slice):
-                x = slice(x.start+dx, x.stop+dx, x.step)
+                x = slice(x.start + dx, x.stop + dx, x.step)
             else:
                 x += dx
         else:
@@ -106,13 +109,19 @@ def cell_to_function_name(cell: Cell):
 def load_from_temp(cell: Cell, sh: SpreadSheet):
     import temp.tmp
     importlib.reload(temp.tmp)
-    return temp.tmp.this_exec(f"{cell_to_function_name(cell)}(cell, sh)", cell, sh)
+    return temp.tmp.this_exec(f"{cell_to_function_name(cell)}(C, S)", cell, sh)
 
 
-def write_to_temp(cell: Cell, fun="""='hello world'"""):
+def write_to_temp(cell: Cell, fun: str):
+    fun = fun.split('\\n')
+    if fun[-1].find('return') == -1:
+        whitespaces = len(fun[-1]) - len(fun[-1].lstrip())
+        fun[-1] = fun[-1][:whitespaces] + 'return ' + fun[-1][whitespaces:]
+    fun = list(map(lambda x:'    ' + x, fun))
+    fun = '\n'.join(fun)
     with open('temp/tmp.py', 'a') as f:
-        f.write(f"""def {cell_to_function_name(cell)}(cell: Cell, sh: SpreadSheet):    
-    return {fun}
+        f.write(f"""def {cell_to_function_name(cell)}(C: Cell, S: SpreadSheet):
+{fun}
 
 
 """)
@@ -149,4 +158,4 @@ if __name__ == '__main__':
     init_temp()
     spreadsheet = load_from_csv('pycell.csv')
     compute_spreadsheet('pycell.csv', spreadsheet)
-
+    print(spreadsheet)
